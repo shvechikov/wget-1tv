@@ -1,32 +1,30 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-"""
-wget wrapper for downloading 1TV channel news
+"""wget wrapper for downloading 1TV channel news
 
-usage: wget-1tv.py [-h] (--last | --list | LINK)
+Usage:
+    wget-1tv.py last
+    wget-1tv.py list
+    wget-1tv.py <PLAYLIST_URL>
+    wget-1tv.py (-h | --help)
 
-positional arguments:
-  LINK        a link to a playlist
-
-optional arguments:
+Options:
   -h, --help  show this help message and exit
-  --last      download last news
-  --list      list news
+  last        download last news release
+  list        list available news releases
 
 """
 
 import re
-import sys
-import operator
 import datetime
 import itertools
 import subprocess
 
 import times
 import requests
+from docopt import docopt
 from lxml import etree
-
 from pytils.dt import ru_strftime
 
 
@@ -57,6 +55,7 @@ def download_news(link_to_playlist=None):
 
 def get_news():
     print 'Fetching %s...' % NEWS_ARCHIVE_LINK
+
     r = requests.get(NEWS_ARCHIVE_LINK)
     et = etree.HTML(r.text)
     blocks = et.xpath('//div[@class="n_day-video"]/ul/li/div[@class="low"]')
@@ -102,18 +101,12 @@ def print_news(news):
 
 
 if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser()
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--last', action='store_true', help='download last news')
-    group.add_argument('--list', action='store_true', help='list news')
-    group.add_argument('link', nargs='?', metavar='LINK', help='a link to a playlist')
-    args = parser.parse_args()
+    arguments = docopt(__doc__, version='wget-1tv 0.1')
 
-    if args.list:
+    if arguments['list']:
         news = get_news()
         print_news(news)
-    elif args.link:
-        download_news(args.link)
-    else:
+    elif arguments['last']:
         download_news()
+    else:
+        download_news(arguments['<PLAYLIST_URL>'])
